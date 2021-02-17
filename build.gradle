@@ -1,0 +1,70 @@
+import proguard.gradle.ProGuardTask
+
+buildscript {
+  repositories {
+    flatDir dirs: 'lib'
+  }
+  dependencies {
+    classpath ':proguard-gradle:'
+    classpath ':proguard:'
+  }
+}
+
+plugins {
+  id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  def v_lucene = '8.8.0'
+
+  implementation "org.apache.lucene:lucene-core:${v_lucene}"
+  implementation "org.apache.lucene:lucene-analyzers-common:${v_lucene}"
+  implementation "org.apache.lucene:lucene-analyzers-smartcn:${v_lucene}"
+  implementation "org.apache.lucene:lucene-analyzers-nori:${v_lucene}"
+  implementation "org.apache.lucene:lucene-analyzers-kuromoji:${v_lucene}"
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+jar {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+  from {
+    (configurations.runtimeClasspath.findAll { !it.path.endsWith(".pom") }).collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+
+  archiveFileName = "tokenize.jar"
+
+  exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+task squish(type: ProGuardTask) {
+  libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+  libraryjars "${System.getProperty('java.home')}/jmods/java.xml.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
+
+  injars 'build/libs/tokenize.jar'
+  outjars 'build/libs/tokenize.out.jar'
+
+  // ProGuard cannot resolve MethodHandle.invokeExact
+  dontwarn 'java.lang.invoke.MethodHandle'
+
+  // Ensure reflection doesn't break
+  dontobfuscate
+
+  keep access: 'public',
+      name: 'org.apache.lucene.analysis.tokenattributes.KeywordAttributeImpl'
+}
