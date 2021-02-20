@@ -1,0 +1,10 @@
+# ProGuard cannot resolve MethodHandle.invokeExact
+-dontwarn 'java.lang.invoke.MethodHandle'
+
+# Ensure reflection doesn't break
+-dontobfuscate
+
+-keep class org.apache.lucene.analysis.tokenattributes.KeywordAttributeImpl
+-keep public class com.whitemagicsoftware.** { *; }
+
+

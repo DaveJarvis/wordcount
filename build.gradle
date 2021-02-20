@@ -1,5 +1,3 @@
-import proguard.gradle.ProGuardTask
-
 buildscript {
   repositories {
     flatDir dirs: 'lib'
@@ -52,19 +50,13 @@ test {
   useJUnitPlatform()
 }
 
-task squish(type: ProGuardTask) {
+//noinspection UnnecessaryQualifiedReference
+task squish(type: proguard.gradle.ProGuardTask) {
+  configuration 'proguard.txt'
+
   libraryjars "${System.getProperty('java.home')}/jmods/java.base.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
   libraryjars "${System.getProperty('java.home')}/jmods/java.xml.jmod", jarfilter: '!**.jar', filter: '!module-info.class'
 
   injars 'build/libs/tokenize.jar'
   outjars 'build/libs/tokenize.out.jar'
-
-  // ProGuard cannot resolve MethodHandle.invokeExact
-  dontwarn 'java.lang.invoke.MethodHandle'
-
-  // Ensure reflection doesn't break
-  dontobfuscate
-
-  keep access: 'public',
-      name: 'org.apache.lucene.analysis.tokenattributes.KeywordAttributeImpl'
 }
