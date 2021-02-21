@@ -34,7 +34,7 @@ public class TokenizerImpl implements Tokenizer {
       while( stream.incrementToken() ) {
         final var began = offset.startOffset();
         final var ended = offset.endOffset();
-        final var word = document.substring( began, ended );
+        final var word = document.substring( began, ended ).toLowerCase();
         result.computeIfAbsent( word, ( k ) -> new int[]{0} )[ 0 ]++;
       }
       stream.end();
